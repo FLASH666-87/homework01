@@ -88,9 +88,145 @@ src/
 ├── App.vue      → 便當盒的主要容器
 ├── router/      → 房間門牌號管理員
 └── views/       → 房間（頁面）
-    ├── Login.vue → 登入房間
-    └── Home.vue  → 點餐房間
+    ├── Login.vue         → 登入房間
+    ├── OrderType.vue     → 選擇內用/自取房間（接待員）
+    ├── Menu.vue          → 點餐房間（主選單）
+    └── OrderConfirm.vue  → 結帳房間（確認訂單）
 ```
+
+---
+
+## 💬 開發紀錄：第二次對話
+
+### 📌 我問了 AI 什麼問題？
+
+**問題 1**：  
+> 「請把內用和到店自取跟主選單分割成兩個不同的頁面，主選單在後，還有幫我修正漢堡、貝果、三明治無法整理畫面的問題」
+
+**問題 2**：  
+> 「我要的訂單編號要是三位數字就好」
+
+**我想要理解的是**：
+1. 怎麼把一個頁面變成多個頁面？
+2. 為什麼分類篩選（漢堡/貝果/三明治）沒有作用？
+3. 怎麼在送出訂單後顯示訂單編號？
+
+---
+
+### 🎯 AI 給我的新「生活比喻」
+
+| Vue 概念 | AI 說的比喻 | 我現在懂了 |
+|----------|-------------|------------|
+| `computed` | **「自動計算機」** | 會自動計算結果，資料變了它也會跟著變 |
+| `localStorage` | **「小本子」** | 可以把資料暫時記住，在不同頁面之間傳遞 |
+| `router.push()` | **「傳送門」** | 按下去就跳到另一個房間（頁面） |
+| 多個 `.vue` 頁面 | **「多個房間」** | 每個頁面是一個房間，客人一步一步走 |
+| 分頁流程 | **「餐廳動線」** | 客人：登入 → 選內用/自取 → 點餐 → 結帳 |
+| 訂單編號 | **「餐廳號碼牌」** | 只需要 3 位數字就能區分 |
+
+---
+
+### 🧠 這次學到的新重點
+
+**1. 為什麼分類篩選沒作用？**
+
+一開始點「漢堡」按鈕，畫面還是顯示所有餐點。
+
+原因是：
+- `menuItems` 一直都是全部 20 個餐點
+- HTML 顯示的是 `menuItems`，沒有被過濾
+
+解決方法是用 `computed` 做一個「過濾器」：
+```javascript
+// 這個是「過濾器」，會根據條件自動過濾餐點
+const filteredMenuItems = computed(() => {
+  let items = menuItems.value  // 一開始是全部20個
+  
+  // 第一關：檢查有沒有選分類
+  if (selectedCategory.value !== 'all') {
+    items = items.filter(item => item.category === selectedCategory.value)
+  }
+  
+  // 第二關：檢查有沒有打搜尋
+  if (searchKeyword.value.trim()) {
+    items = items.filter(item => item.name.includes(searchKeyword.value))
+  }
+  
+  return items  // 把過濾後的結果傳回去
+})
+```
+
+**比喻：**  
+> 就像餐廳有一個「篩子」，把「漢堡」的洞放到篩子上 → 只剩下漢堡
+
+---
+
+**2. 不同頁面之間怎麼傳資料？**
+
+用 `localStorage` 就像餐廳的「小本子」：
+```javascript
+// 把資料寫到小本子
+localStorage.setItem('orderData', JSON.stringify(orderData))
+
+// 從小本子讀資料
+const orderDataJson = localStorage.getItem('orderData')
+const orderData = JSON.parse(orderDataJson)
+```
+
+---
+
+**3. 頁面跳轉流程（餐廳動線）**
+
+```
+1. /login（登入房間）→ 驗證身份
+   ↓
+2. /order-type（接待員）→ 選內用或自取
+   ↓
+3. /menu（點餐區）→ 開始選餐點
+   ↓ 點「送出訂單」
+4. /order-confirm（結帳區）→ 選擇支付方式 → 顯示訂單編號
+```
+
+---
+
+### 📝 這次新增的功能
+
+**新增的頁面：**
+- `OrderType.vue`：選擇內用/自取的頁面
+- `OrderConfirm.vue`：訂單確認和完成的頁面
+
+**修改的功能：**
+- 分類篩選：終於能正確過濾餐點了！
+- 送出訂單：多了確認對話框
+- 訂單編號：改成 3 位數字
+
+---
+
+### 📝 AI 寫的程式碼特色
+
+這次學到了 `computed` 和 `localStorage` 的用法：
+
+```javascript
+// computed：自動計算機
+const filteredMenuItems = computed(() => {
+  return menuItems.value.filter(item => item.category === selectedCategory.value)
+})
+
+// localStorage：小本子（在不同頁面之間傳資料）
+localStorage.setItem('data', JSON.stringify(data))
+const data = JSON.parse(localStorage.getItem('data'))
+```
+
+---
+
+## ⚙️ 技術棧
+
+- **Vue 3**（便當盒框架）
+- **Vue Router**（傳送門）
+- **localStorage**（小本子）
+- **computed**（自動計算機）
+- **TypeScript**（讓程式碼不會打錯字）
+- **Vite**（讓開發變快的工具）
 
 ---
 

@@ -1,138 +1,24 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+// 引入 router（像借一台導航機）
+const router = useRouter()
+
+// ==================== 檢查登入狀態 ====================
+
+// 當這個頁面載入時，檢查有沒有登入
+onMounted(() => {
+  // 從 localStorage 讀取當前登入者
+  const currentUserJson = localStorage.getItem('currentUser')
+  
+  // 如果沒有登入過，就跳回登入頁面
+  if (!currentUserJson) {
+    router.push('/login')
+  }
+})
 
 // ==================== 放資料的盒子 ====================
-
-// 放一個叫 isDineIn 的盒子，預設是 true（內用模式）
-// 如果是 false 就是自取模式
-const isDineIn = ref(true)
-
-// 放一個叫 dineInTime 的盒子，裝內用預計時間
-// 預設是空字串（還沒選時間）
-const dineInTime = ref('')
-
-// 放一個叫 pickupTime 的盒子，裝自取預計時間
-// 預設是空字串（還沒選時間）
-const pickupTime = ref('')
-
-// 放一個叫 tableNumber 的盒子，裝內用桌號
-// 預設是空字串（還沒選桌號）
-const tableNumber = ref('')
-
-// 放一個叫 showTimePicker 的盒子，預設是 false（時間選擇器收合）
-const showTimePicker = ref(false)
-
-// 放一個叫 showTablePicker 的盒子，預設是 false（桌號選擇器收合）
-const showTablePicker = ref(false)
-
-// 計算目前的取餐方式文字
-// 如果是內用就顯示「內用」，否則顯示「到店自取」
-const orderTypeText = computed(() => {
-  return isDineIn.value ? '🍽️ 內用' : '🏃 到店自取'
-})
-
-// 計算顯示的時間文字
-// 如果有選時間就顯示，否則顯示「尚未選擇」
-const dineInTimeText = computed(() => {
-  return dineInTime.value ? dineInTime.value : '尚未選擇'
-})
-
-const pickupTimeText = computed(() => {
-  return pickupTime.value ? pickupTime.value : '尚未選擇'
-})
-
-// 計算顯示的桌號文字
-// 如果有選桌號就顯示「第X桌」，否則顯示「尚未選擇」
-const tableNumberText = computed(() => {
-  return tableNumber.value ? `第 ${tableNumber.value} 桌` : '尚未選擇'
-})
-
-// ==================== 服務生函數 ====================
-
-// 切換到內用模式
-// 按下去後會把 isDineIn 盒子設成 true
-const switchToDineIn = () => {
-  // 把模式切換成內用
-  isDineIn.value = true
-  
-  // 收合時間選擇器
-  showTimePicker.value = false
-  
-  // 收合桌號選擇器
-  showTablePicker.value = false
-}
-
-// 切換到自取模式
-// 按下去後會把 isDineIn 盒子設成 false
-const switchToPickup = () => {
-  // 把模式切換成自取
-  isDineIn.value = false
-  
-  // 收合時間選擇器
-  showTimePicker.value = false
-  
-  // 收合桌號選擇器
-  showTablePicker.value = false
-}
-
-// 展開時間選擇器
-// 這個函數用來打開時間選擇的小視窗
-const openTimePicker = () => {
-  // 把時間選擇器打開
-  showTimePicker.value = true
-  
-  // 如果是內用就打開桌號選擇器
-  // 如果是自取就打開取餐時間選擇器
-  if (isDineIn.value) {
-    showTablePicker.value = true
-  }
-}
-
-// 展開取餐時間選擇器
-// 這個函數用來打開取餐時間選擇的小視窗
-const openPickupTimePicker = () => {
-  showTimePicker.value = true
-}
-
-// 選擇內用時間
-// 把選到的時間放進 dineInTime 盒子
-const selectDineInTime = (time: string) => {
-  // 把時間放進盒子
-  dineInTime.value = time
-  
-  // 關閉時間選擇器
-  showTimePicker.value = false
-}
-
-// 選擇取餐時間
-// 把選到的時間放進 pickupTime 盒子
-const selectPickupTime = (time: string) => {
-  // 把時間放進盒子
-  pickupTime.value = time
-  
-  // 關閉時間選擇器
-  showTimePicker.value = false
-}
-
-// 選擇桌號
-// 把選到的桌號放進 tableNumber 盒子
-const selectTable = (table: string) => {
-  // 把桌號放進盒子
-  tableNumber.value = table
-  
-  // 關閉桌號選擇器
-  showTablePicker.value = false
-}
-
-// 關閉所有選擇器
-// 這個函數用來把時間和桌號選擇器都收起來
-const closeAllPickers = () => {
-  // 把時間選擇器關起來
-  showTimePicker.value = false
-  
-  // 把桌號選擇器關起來
-  showTablePicker.value = false
-}
 
 // 放一個叫 searchKeyword 的盒子，裝搜尋關鍵字
 const searchKeyword = ref('')
@@ -142,11 +28,8 @@ const searchKeyword = ref('')
 const selectedCategory = ref('all')
 
 // 放一個叫 cartItems 的盒子，裝購物籃裡的東西
-// 一開始是空的
-const cartItems = ref([
-  { id: 1, name: '培根雞蛋堡', price: 70, quantity: 1 },
-  { id: 2, name: '火腿蛋三明治', price: 65, quantity: 2 }
-])
+// 一開始是空的（沒有預設值）
+const cartItems = ref<Array<{id: number, name: string, price: number, quantity: number}>>([])
 
 // 放一個叫 showCart 的盒子，預設是 false（購物籃收合）
 const showCart = ref(false)
@@ -155,17 +38,25 @@ const showCart = ref(false)
 const showCoupon = ref(false)
 
 // 放一個叫 userName 的盒子，裝會員名字
-const userName = ref('小明')
+// 從 localStorage 讀取當前登入者的名字
+const currentUserJson = localStorage.getItem('currentUser')
+const currentUser = currentUserJson ? JSON.parse(currentUserJson) : null
+const userName = ref(currentUser?.name || '訪客')
+
+// 放一個叫 orderInfo 的盒子，裝取餐資訊
+// 從 localStorage 讀取
+const orderInfoJson = localStorage.getItem('orderInfo')
+const orderInfo = orderInfoJson ? JSON.parse(orderInfoJson) : null
 
 // 優惠券資料
 const coupons = ref({
-  points: 3,              // 集點卡：目前有3點
-  pointsExpire: '2026/7/9',  // 集點卡：有效期限
-  newUser30: true,       // 新人禮：現折$30（true = 還沒用）
-  newUser30Expire: '2026/4/12',  // 新人禮：有效期限
-  newUserFreeShip: true, // 新人禮：免運費（true = 還沒用）
-  mysteryCoupon: 2,      // 神秘卷：目前有2張
-  mysteryCouponExpire: '2026/5/9'  // 神秘卷：有效期限
+  points: 3,
+  pointsExpire: '2026/7/9',
+  newUser30: true,
+  newUser30Expire: '2026/4/12',
+  newUserFreeShip: true,
+  mysteryCoupon: 2,
+  mysteryCouponExpire: '2026/5/9'
 })
 
 // 勾選了哪些優惠券
@@ -257,7 +148,33 @@ const decreaseQuantity = (id: number) => {
   }
 }
 
-// ==================== 計算屬性（算錢用的） ====================
+// 返回選擇取餐方式
+const goBack = () => {
+  router.push('/order-type')
+}
+
+// ==================== 計算屬性 ====================
+
+// 計算過濾後的餐點列表
+// 這個函數會根據搜尋關鍵字和分類來過濾餐點
+const filteredMenuItems = computed(() => {
+  // 先取得所有餐點
+  let items = menuItems.value
+  
+  // 如果有選分類（不是 'all'），就只留下這個分類的餐點
+  if (selectedCategory.value !== 'all') {
+    items = items.filter(item => item.category === selectedCategory.value)
+  }
+  
+  // 如果有輸入搜尋關鍵字，就只留下名字包含關鍵字的餐點
+  if (searchKeyword.value.trim()) {
+    const keyword = searchKeyword.value.toLowerCase()
+    items = items.filter(item => item.name.toLowerCase().includes(keyword))
+  }
+  
+  // 把過濾後的結果傳回去
+  return items
+})
 
 // 計算小計
 const subtotal = () => {
@@ -297,21 +214,65 @@ const total = () => {
   return Math.max(0, subtotal() - discount())
 }
 
+// 計算取餐方式文字
+const orderTypeText = computed(() => {
+  if (!orderInfo) return ''
+  return orderInfo.type === 'dine-in' ? '🍽️ 內用' : '🏃 到店自取'
+})
+
+// 計算取餐資訊文字
+const orderDetailText = computed(() => {
+  if (!orderInfo) return ''
+  
+  if (orderInfo.type === 'dine-in') {
+    // 內用：顯示桌號和時間
+    const table = orderInfo.tableNumber ? `第 ${orderInfo.tableNumber} 桌` : ''
+    const time = orderInfo.dineInTime || orderInfo.pickupTime
+    return table + (time ? `，${time}` : '')
+  } else {
+    // 自取：顯示時間
+    return orderInfo.pickupTime || ''
+  }
+})
+
 // 送出訂單
 const submitOrder = () => {
+  // 先檢查購物籃是不是空的
   if (cartItems.value.length === 0) {
     alert('購物籃是空的！')
     return
   }
-  alert(`訂單已送出！總金額：$${total()}`)
+  
+  // 跳出確認對話框
+  const confirmed = confirm(`確定要送出訂單嗎？\n總金額：$${total()}`)
+  
+  // 如果客人按「確定」
+  if (confirmed) {
+    // 把訂單資料存到 localStorage（這樣下一個頁面才能拿到）
+    const orderData = {
+      cartItems: cartItems.value,
+      subtotal: subtotal(),
+      discount: discount(),
+      total: total(),
+      orderInfo: orderInfo,
+      userName: userName.value,
+      selectedCoupons: selectedCoupons.value
+    }
+    localStorage.setItem('orderData', JSON.stringify(orderData))
+    
+    // 跳轉到訂單確認頁面
+    router.push('/order-confirm')
+  }
 }
 </script>
 
 <template>
-  <div class="home-page">
+  <div class="menu-page">
     
     <!-- ==================== 頂部區 ==================== -->
     <header class="header">
+      <button class="back-btn" @click="goBack">← 返回</button>
+      
       <!-- 搜尋框 -->
       <div class="search-box">
         <input 
@@ -328,181 +289,11 @@ const submitOrder = () => {
       </div>
     </header>
 
-    <!-- ==================== 取餐方式 ==================== -->
-    <!-- 這是一個大區塊，用來讓使用者選擇要內用還是自取 -->
-    <div class="order-type-section">
-      
-      <!-- 內用按鈕 -->
-      <!-- 如果 isDineIn 是 true，這個按鈕就會變成綠色（active） -->
-      <button 
-        class="order-type-btn"
-        :class="{ active: isDineIn }"
-        @click="switchToDineIn"
-      >
-        <!-- 按鈕裡面顯示一個盤子圖示和「內用」文字 -->
-        🍽️ 內用
-      </button>
-      
-      <!-- 自取按鈕 -->
-      <!-- 如果 isDineIn 是 false，這個按鈕就會變成綠色（active） -->
-      <button 
-        class="order-type-btn"
-        :class="{ active: !isDineIn }"
-        @click="switchToPickup"
-      >
-        <!-- 按鈕裡面顯示一個人跑步的圖示和「到店自取」文字 -->
-        🏃 到店自取
-      </button>
-    </div>
-
-    <!-- ==================== 取餐資訊填寫區 ==================== -->
-    <!-- 這裡根據選擇的模式顯示不同的輸入框 -->
-    <div class="order-info-section">
-      
-      <!-- 如果選擇內用，就顯示這個區塊 -->
-      <div v-if="isDineIn" class="info-card">
-        
-        <!-- 內用標題 -->
-        <div class="info-card-header">
-          <!-- 顯示一個盤子圖示和「內用資訊」文字 -->
-          🍽️ 內用資訊
-        </div>
-        
-        <!-- 內用內容 -->
-        <div class="info-card-content">
-          
-          <!-- 桌號選擇區 -->
-          <div class="info-row">
-            <!-- 左邊顯示「桌號：」標籤 -->
-            <div class="info-label">桌號：</div>
-            
-            <!-- 右邊顯示目前選的桌號或是「尚未選擇」 -->
-            <div 
-              class="info-value clickable"
-              @click="openTimePicker"
-            >
-              <!-- 如果有選桌號就顯示「第X桌」，否則顯示「尚未選擇」 -->
-              {{ tableNumberText }}
-              
-              <!-- 旁邊顯示一個小箭頭，表示可以點擊 -->
-              <span class="arrow">▼</span>
-            </div>
-          </div>
-          
-          <!-- 預計時間選擇區 -->
-          <div class="info-row">
-            <!-- 左邊顯示「預計時間：」標籤 -->
-            <div class="info-label">預計時間：</div>
-            
-            <!-- 右邊顯示目前選的時間或是「尚未選擇」 -->
-            <div 
-              class="info-value clickable"
-              @click="openPickupTimePicker"
-            >
-              <!-- 呼叫 dineInTimeText 盒子，顯示時間文字 -->
-              {{ dineInTimeText }}
-              
-              <!-- 旁邊顯示一個小箭頭，表示可以點擊 -->
-              <span class="arrow">▼</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 如果選擇自取，就顯示這個區塊 -->
-      <div v-else class="info-card">
-        
-        <!-- 自取標題 -->
-        <div class="info-card-header">
-          <!-- 顯示一個跑步圖示和「自取資訊」文字 -->
-          🏃 自取資訊
-        </div>
-        
-        <!-- 自取內容 -->
-        <div class="info-card-content">
-          
-          <!-- 取餐時間選擇區 -->
-          <div class="info-row">
-            <!-- 左邊顯示「取餐時間：」標籤 -->
-            <div class="info-label">取餐時間：</div>
-            
-            <!-- 右邊顯示目前選的時間或是「尚未選擇」 -->
-            <div 
-              class="info-value clickable"
-              @click="openPickupTimePicker"
-            >
-              <!-- 呼叫 pickupTimeText 盒子，顯示時間文字 -->
-              {{ pickupTimeText }}
-              
-              <!-- 旁邊顯示一個小箭頭，表示可以點擊 -->
-              <span class="arrow">▼</span>
-            </div>
-          </div>
-          
-          <!-- 提醒文字 -->
-          <div class="info-reminder">
-            <!-- 顯示一個時鐘圖示和提醒文字 -->
-            ⏰ 請於選擇的時間到店取餐
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== 桌號/時間選擇器彈窗 ==================== -->
-    <!-- 當 showTimePicker 是 true 的時候，這個黑色半透明背景會出現 -->
-    <div v-if="showTimePicker" class="picker-overlay" @click="closeAllPickers">
-      
-      <!-- 這個是真正的選擇器視窗（.stop 是阻止點擊穿透） -->
-      <div class="picker-modal" @click.stop>
-        
-        <!-- 選擇器的標題 -->
-        <div class="picker-title">
-          <!-- 根據是內用還是自取，顯示不同的標題 -->
-          {{ isDineIn ? '📋 請選擇桌號' : '⏰ 請選擇取餐時間' }}
-        </div>
-        
-        <!-- 選擇器的內容區域 -->
-        <div class="picker-content">
-          
-          <!-- 如果是內用模式，就顯示桌號選擇 -->
-          <div v-if="isDineIn">
-            <!-- 這是一個網格，用來排列桌號按鈕 -->
-            <div class="table-grid">
-              <!-- 用影印機印出 1-12 的桌號按鈕 -->
-              <button 
-                v-for="table in 12" 
-                :key="table"
-                class="table-btn"
-                :class="{ active: tableNumber === String(table) }"
-                @click="selectTable(String(table))"
-              >
-                {{ table }}
-              </button>
-            </div>
-          </div>
-          
-          <!-- 如果是自取模式，就顯示時間選擇 -->
-          <div v-else>
-            <!-- 這是一個網格，用來排列時間按鈕 -->
-            <div class="time-grid">
-              <!-- 用影印機印出 6:00 到 12:00 的時間按鈕 -->
-              <button 
-                v-for="time in ['6:00', '6:30', '7:00', '7:30', '8:00', '8:30', '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00']" 
-                :key="time"
-                class="time-btn"
-                :class="{ active: pickupTime === time }"
-                @click="selectPickupTime(time)"
-              >
-                {{ time }}
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 選擇器的取消按鈕 -->
-        <button class="picker-cancel" @click="closeAllPickers">
-          取消
-        </button>
+    <!-- ==================== 取餐資訊顯示區 ==================== -->
+    <div v-if="orderInfo" class="order-info-bar">
+      <div class="order-info-text">
+        {{ orderTypeText }}
+        <span v-if="orderDetailText"> - {{ orderDetailText }}</span>
       </div>
     </div>
 
@@ -540,10 +331,16 @@ const submitOrder = () => {
 
     <!-- ==================== 餐點展示區 ==================== -->
     <div class="menu-section">
+      <!-- 顯示目前有多少餐點 -->
+      <div class="menu-count">
+        共 {{ filteredMenuItems.length }} 項餐點
+      </div>
+      
       <div class="menu-grid">
         <!-- 用影印機把餐點卡片複制出來 -->
+        <!-- 現在是顯示過濾後的餐點 -->
         <div 
-          v-for="item in menuItems" 
+          v-for="item in filteredMenuItems" 
           :key="item.id"
           class="menu-card"
         >
@@ -561,6 +358,13 @@ const submitOrder = () => {
             + 加入
           </button>
         </div>
+      </div>
+      
+      <!-- 如果沒有符合條件的餐點 -->
+      <div v-if="filteredMenuItems.length === 0" class="no-results">
+        <div class="no-results-icon">🔍</div>
+        <div class="no-results-text">找不到符合的餐點</div>
+        <div class="no-results-hint">試試其他關鍵字或分類</div>
       </div>
     </div>
 
@@ -687,22 +491,9 @@ const submitOrder = () => {
         </div>
 
         <!-- 取餐方式 -->
-        <div class="order-type-display">
-          <!-- 根據 isDineIn 盒子顯示不同的文字 -->
-          <!-- 如果是內用就顯示「🍽️ 內用」，否則顯示「🏃 到店自取」 -->
+        <div v-if="orderInfo" class="order-type-display">
           {{ orderTypeText }}
-          
-          <!-- 如果有選桌號，就顯示桌號 -->
-          <span v-if="isDineIn && tableNumber">
-            <!-- 顯示「第X桌」 -->
-            - {{ tableNumberText }}
-          </span>
-          
-          <!-- 如果有選時間，就顯示時間 -->
-          <span v-if="(isDineIn && dineInTime) || (!isDineIn && pickupTime)">
-            <!-- 顯示「，XX:XX」 -->
-            ，{{ isDineIn ? dineInTime : pickupTime }}
-          </span>
+          <span v-if="orderDetailText"> - {{ orderDetailText }}</span>
         </div>
 
         <!-- 送出訂單按鈕 -->
@@ -718,7 +509,7 @@ const submitOrder = () => {
 
 <style scoped>
 /* ==================== 整體樣式 ==================== */
-.home-page {
+.menu-page {
   min-height: 100vh;
   background: #f5f5f5;
   padding-bottom: 120px;
@@ -729,12 +520,27 @@ const submitOrder = () => {
   background: white;
   padding: 15px 20px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 15px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #4CAF50;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 10px;
+  white-space: nowrap;
+}
+
+.back-btn:hover {
+  color: #45a049;
 }
 
 .search-box {
@@ -758,335 +564,20 @@ const submitOrder = () => {
 .user-info {
   font-size: 16px;
   color: #333;
-  margin-left: 15px;
+  white-space: nowrap;
 }
 
-/* ==================== 取餐方式 ==================== */
-/* 這是取餐方式的大區塊 */
-.order-type-section {
-  /* 用彈性盒子讓兩個按鈕排在一起 */
-  display: flex;
-  /* 按鈕之間的距離 */
-  gap: 15px;
-  /* 上下留白 */
-  padding: 20px;
-  /* 內容置中 */
-  justify-content: center;
-  /* 背景是白色 */
-  background: white;
-  /* 下面留一點空間 */
-  margin-bottom: 10px;
-}
-
-/* 這是內用和自取按鈕的共同樣式 */
-.order-type-btn {
-  /* 調整大小和間距 */
-  padding: 15px 30px;
-  /* 邊框是灰色的 */
-  border: 2px solid #ddd;
-  /* 圓角 */
-  border-radius: 15px;
-  /* 字體大小 */
-  font-size: 16px;
-  /* 指標變成手指頭 */
-  cursor: pointer;
-  /* 背景是白色 */
-  background: white;
-  /* 動畫效果（改變背景色時會平滑過渡） */
-  transition: all 0.3s;
-}
-
-/* 這是選中的按鈕（active）的特殊樣式 */
-.order-type-btn.active {
-  /* 背景變成綠色 */
-  background: #4CAF50;
-  /* 文字變成白色 */
-  color: white;
-  /* 邊框也變成綠色 */
-  border-color: #4CAF50;
-}
-
-/* ==================== 取餐資訊區 ==================== */
-/* 這是取餐資訊填寫區的大區塊 */
-.order-info-section {
-  /* 上下留白 */
-  margin: 10px 20px;
-}
-
-/* 這是資訊卡（顯示內用或自取資訊的白色卡片） */
-.info-card {
-  /* 背景是白色 */
-  background: white;
-  /* 圓角 */
-  border-radius: 15px;
-  /* 陰影效果 */
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  /* 內容不超過這個範圍 */
-  overflow: hidden;
-}
-
-/* 這是資訊卡的標題區（藍色那一行） */
-.info-card-header {
-  /* 背景是淺藍色 */
+/* ==================== 取餐資訊顯示區 ==================== */
+.order-info-bar {
   background: #e3f2fd;
-  /* 文字大小 */
-  font-size: 16px;
-  /* 粗體 */
-  font-weight: bold;
-  /* 上下留白 */
-  padding: 15px;
-  /* 文字置中 */
+  padding: 15px 20px;
   text-align: center;
-  /* 文字顏色 */
+  font-weight: bold;
   color: #1976d2;
 }
 
-/* 這是資訊卡的內容區 */
-.info-card-content {
-  /* 裡面留白 */
-  padding: 20px;
-}
-
-/* 這是每一列（標籤+值） */
-.info-row {
-  /* 用彈性盒子讓標籤和值排在一起 */
-  display: flex;
-  /* 讓值靠右對齊 */
-  justify-content: space-between;
-  /* 上下留白 */
-  margin-bottom: 15px;
-}
-
-/* 這是標籤（像「桌號：」「預計時間：」） */
-.info-label {
-  /* 粗體 */
-  font-weight: bold;
-  /* 文字顏色 */
-  color: #333;
-}
-
-/* 這是值（像「第5桌」「尚未選擇」） */
-.info-value {
-  /* 文字顏色 */
-  color: #666;
-}
-
-/* 這是可以點擊的值（鼠標會變成手指頭） */
-.info-value.clickable {
-  /* 指標變成手指頭 */
-  cursor: pointer;
-  /* 加上動畫效果 */
-  transition: color 0.3s;
-}
-
-/* 當滑鼠移到可點擊的值上時 */
-.info-value.clickable:hover {
-  /* 文字變成綠色 */
-  color: #4CAF50;
-}
-
-/* 這是小箭頭（▼）的樣式 */
-.arrow {
-  /* 讓箭頭和文字有一點距離 */
-  margin-left: 5px;
-  /* 箭頭小一點 */
-  font-size: 12px;
-}
-
-/* 這是提醒文字（像「請於選擇的時間到店取餐」） */
-.info-reminder {
-  /* 背景是淡黃色 */
-  background: #fff8e1;
-  /* 圓角 */
-  border-radius: 10px;
-  /* 上下留白 */
-  padding: 15px;
-  /* 文字置中 */
-  text-align: center;
-  /* 文字顏色 */
-  color: #f57c00;
-  /* 字體大小 */
-  font-size: 14px;
-}
-
-/* ==================== 選擇器彈窗 ==================== */
-/* 這是黑色的半透明背景（覆蓋層） */
-.picker-overlay {
-  /* 固定在螢幕上 */
-  position: fixed;
-  /* 充滿整個螢幕 */
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* 半透明黑色背景 */
-  background: rgba(0,0,0,0.5);
-  /* 讓這個在最上層 */
-  z-index: 1000;
-  /* 內容置中 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 這是選擇器的白色彈窗 */
-.picker-modal {
-  /* 背景是白色 */
-  background: white;
-  /* 寬度最大 90% */
-  width: 90%;
-  /* 最大寬度 350px */
-  max-width: 350px;
-  /* 圓角 */
-  border-radius: 20px;
-  /* 裡面留白 */
-  padding: 25px;
-  /* 動畫效果 */
-  transition: transform 0.3s;
-}
-
-/* 這是選擇器的標題 */
-.picker-title {
-  /* 粗體 */
-  font-weight: bold;
-  /* 文字大小 */
-  font-size: 18px;
-  /* 置中 */
-  text-align: center;
-  /* 下面留白 */
-  margin-bottom: 20px;
-}
-
-/* 這是選擇器的內容區 */
-.picker-content {
-  /* 下面留白 */
-  margin-bottom: 20px;
-}
-
-/* 這是桌號的網格 */
-.table-grid {
-  /* 用 CSS Grid 排版 */
-  display: grid;
-  /* 每行放 4 個 */
-  grid-template-columns: repeat(4, 1fr);
-  /* 按鈕之間的距離 */
-  gap: 10px;
-}
-
-/* 這是桌號按鈕 */
-.table-btn {
-  /* 調整大小 */
-  padding: 15px;
-  /* 邊框 */
-  border: 2px solid #ddd;
-  /* 圓角 */
-  border-radius: 10px;
-  /* 背景 */
-  background: white;
-  /* 字體大小 */
+.order-info-text {
   font-size: 16px;
-  /* 粗體 */
-  font-weight: bold;
-  /* 手指頭指標 */
-  cursor: pointer;
-  /* 動畫效果 */
-  transition: all 0.3s;
-}
-
-/* 當滑鼠移到桌號按鈕上時 */
-.table-btn:hover {
-  /* 背景變成淺綠色 */
-  background: #e8f5e9;
-  /* 邊框變成綠色 */
-  border-color: #4CAF50;
-}
-
-/* 選中的桌號按鈕 */
-.table-btn.active {
-  /* 背景變成綠色 */
-  background: #4CAF50;
-  /* 文字變成白色 */
-  color: white;
-  /* 邊框也變成綠色 */
-  border-color: #4CAF50;
-}
-
-/* 這是時間的網格 */
-.time-grid {
-  /* 用 CSS Grid 排版 */
-  display: grid;
-  /* 每行放 3 個 */
-  grid-template-columns: repeat(3, 1fr);
-  /* 按鈕之間的距離 */
-  gap: 10px;
-}
-
-/* 這是時間按鈕 */
-.time-btn {
-  /* 調整大小 */
-  padding: 12px;
-  /* 邊框 */
-  border: 2px solid #ddd;
-  /* 圓角 */
-  border-radius: 10px;
-  /* 背景 */
-  background: white;
-  /* 字體大小 */
-  font-size: 14px;
-  /* 粗體 */
-  font-weight: bold;
-  /* 手指頭指標 */
-  cursor: pointer;
-  /* 動畫效果 */
-  transition: all 0.3s;
-}
-
-/* 當滑鼠移到時間按鈕上時 */
-.time-btn:hover {
-  /* 背景變成淺綠色 */
-  background: #e8f5e9;
-  /* 邊框變成綠色 */
-  border-color: #4CAF50;
-}
-
-/* 選中的時間按鈕 */
-.time-btn.active {
-  /* 背景變成綠色 */
-  background: #4CAF50;
-  /* 文字變成白色 */
-  color: white;
-  /* 邊框也變成綠色 */
-  border-color: #4CAF50;
-}
-
-/* 這是選擇器的取消按鈕 */
-.picker-cancel {
-  /* 寬度 100% */
-  width: 100%;
-  /* 調整大小 */
-  padding: 12px;
-  /* 背景是淺灰色 */
-  background: #f5f5f5;
-  /* 沒有邊框 */
-  border: none;
-  /* 圓角 */
-  border-radius: 10px;
-  /* 字體大小 */
-  font-size: 16px;
-  /* 粗體 */
-  font-weight: bold;
-  /* 文字顏色 */
-  color: #666;
-  /* 手指頭指標 */
-  cursor: pointer;
-  /* 動畫效果 */
-  transition: all 0.3s;
-}
-
-/* 當滑鼠移到取消按鈕上時 */
-.picker-cancel:hover {
-  /* 背景變成深灰色 */
-  background: #e0e0e0;
 }
 
 /* ==================== 分類標籤 ==================== */
@@ -1117,6 +608,13 @@ const submitOrder = () => {
 /* ==================== 餐點展示區 ==================== */
 .menu-section {
   padding: 20px;
+}
+
+.menu-count {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 15px;
 }
 
 .menu-grid {
@@ -1176,6 +674,29 @@ const submitOrder = () => {
 
 .add-btn:hover {
   background: #45a049;
+}
+
+/* ==================== 無結果顯示 ==================== */
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.no-results-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+}
+
+.no-results-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.no-results-hint {
+  font-size: 14px;
+  color: #666;
 }
 
 /* ==================== 購物籃 ==================== */

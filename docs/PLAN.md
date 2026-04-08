@@ -355,3 +355,316 @@ const selectTable = (table: string) => {
    - 怎麼把資料送到伺服器？
    - 怎麼從資料庫讀取餐點？
    - 怎麼做出一個真的能用的登入系統？
+
+---
+
+## 十三、把一個頁面變成多個頁面（AI 教我做的白話文步驟）
+
+### 13.1 我問 AI 的問題
+
+> 「請把內用和到店自取跟主選單分割成兩個不同的頁面，主選單在後，還有幫我修正漢堡、貝果、三明治無法整理畫面的問題」
+
+> 「我要的訂單編號要是三位數字就好」
+
+### 13.2 問題分析
+
+**問題 1：頁面太雜亂**
+- 本來只有一個頁面（Home.vue）
+- 所有功能都擠在一起：登入、內用/自取、點餐
+- 看起來很亂
+
+**問題 2：分類篩選沒作用**
+- 點「漢堡」按鈕，畫面還是顯示所有餐點
+- 因為 `menuItems` 沒有被過濾
+
+### 13.3 AI 給我的白話文步驟
+
+**第一步：把頁面拆成三個**
+```
+把一個大房間拆成三個小房間：
+- 第一關：/login（登入）
+- 第二關：/order-type（選擇內用/自取）
+- 第三關：/menu（點餐）
+- 第四關：/order-confirm（結帳）
+```
+
+**第二步：建立新的頁面檔案**
+```
+新增 OrderType.vue：接待員頁面（選擇內用/自取）
+新增 OrderConfirm.vue：結帳頁面（支付方式和訂單編號）
+把 Home.vue 改名成 Menu.vue：點餐頁面
+```
+
+**第三步：設定路由（告訴程式要走哪條路）**
+```
+在 router/index.ts 裡新增：
+- /order-type → OrderType.vue
+- /menu → Menu.vue
+- /order-confirm → OrderConfirm.vue
+```
+
+**第四步：讓頁面之間可以傳資料**
+```
+用 localStorage（小本子）在不同頁面之間傳資料：
+- OrderType.vue 選完內用/自取 → 存到 localStorage
+- Menu.vue 讀取 localStorage → 顯示取餐資訊
+- Menu.vue 送出訂單 → 存到 localStorage
+- OrderConfirm.vue 讀取 localStorage → 顯示訂單資料
+```
+
+**第五步：修正分類篩選功能**
+```
+問題：為什麼分類篩選沒作用？
+原因：HTML 顯示的是 menuItems（全部20個），沒有被過濾
+
+解決：用 computed（自動計算機）做一個過濾器：
+1. 建立 filteredMenuItems 計算屬性
+2. 根據 selectedCategory 過濾餐點
+3. HTML 改成顯示 filteredMenuItems
+```
+
+**第六步：實作送出訂單流程**
+```
+1. Menu.vue 按「送出訂單」
+2. 跳出 confirm() 確認對話框
+3. 客人按「確定」→ 把訂單資料存到 localStorage
+4. 跳轉到 /order-confirm
+5. OrderConfirm.vue 選擇支付方式（信用卡/現場支付）
+6. 選擇後 → 生成 3 位數訂單編號
+7. 顯示成功畫面
+```
+
+### 13.4 AI 給我的重要提醒
+
+1. **`computed` vs `ref`**
+   - `ref`：存放「靜態」的資料（不會自動變）
+   - `computed`：存放「動態」的資料（會根據其他資料自動計算）
+
+2. **localStorage 的用途**
+   - 不同頁面之間傳遞資料
+   - 暫時保存使用者的選擇
+   - 關閉瀏覽器後資料會消失
+
+3. **頁面跳轉要用 `router.push()`**
+   - `router.push('/order-type')` = 跳到選擇內用/自取頁面
+   - `router.push('/menu')` = 跳到點餐頁面
+   - `router.push('/order-confirm')` = 跳到結帳頁面
+
+---
+
+## 十四、用來理解新功能的生活比喻
+
+### 14.1 `computed`（自動計算機）
+
+**比喻：**  
+> 就像餐廳的「電子看板」：
+> - 廚房改了一道菜 → 看板上自動更新
+> - 不需要人為去刷新，資料變了畫面就跟著變
+
+**什麼時候用：**
+- 需要根據其他資料計算出來的結果
+- 計算的結果會隨著其他資料改變而改變
+
+**程式碼範例：**
+```javascript
+// 建立一個「過濾器」
+const filteredMenuItems = computed(() => {
+  let items = menuItems.value  // 一開始是全部20個
+  
+  // 如果有選分類，就過濾
+  if (selectedCategory.value !== 'all') {
+    items = items.filter(item => item.category === selectedCategory.value)
+  }
+  
+  return items
+})
+```
+
+---
+
+### 14.2 `localStorage`（小本子）
+
+**比喻：**  
+> 就像餐廳的「傳票本」：
+> - 第一站（接待員）寫下「內用、第5桌、9:00」
+> - 第二站（服務生）拿起傳票，看到「內用、第5桌」
+> - 第三站（結帳）把訂單存到本子裡
+
+**什麼時候用：**
+- 不同頁面之間需要傳遞資料
+- 使用者的選擇需要暫時保存
+- 不想讓資料在刷新頁面後消失
+
+**程式碼範例：**
+```javascript
+// 把資料寫到小本子
+localStorage.setItem('orderInfo', JSON.stringify(orderInfo))
+
+// 從小本子讀資料
+const orderInfoJson = localStorage.getItem('orderInfo')
+const orderInfo = JSON.parse(orderInfoJson)
+```
+
+---
+
+### 14.3 多頁面跳轉（餐廳動線）
+
+**比喻：**  
+> 就像餐廳的「動線設計」：
+> - 客人從大門進來（登入）
+> - 到接待台問要內用還是外帶（選擇取餐方式）
+> - 到座位上看菜單點餐（點餐）
+> - 吃完叫服務生結帳（結帳）
+> - 拿著號碼牌取餐（完成）
+
+**頁面對應：**
+```
+1. /login → 登入頁面（大門）
+2. /order-type → 選擇內用/自取（接待台）
+3. /menu → 點餐頁面（座位）
+4. /order-confirm → 結帳頁面（收銀台）
+```
+
+---
+
+## 十五、程式碼範例
+
+### 15.1 分類篩選（computed + filter）
+
+```javascript
+// 放一個叫 selectedCategory 的盒子，裝目前選的分類
+const selectedCategory = ref('all')
+
+// 放一個叫 menuItems 的盒子，裝所有餐點
+const menuItems = ref([
+  { id: 1, name: '培根雞蛋堡', category: 'burger' },
+  { id: 2, name: '火腿蛋三明治', category: 'sandwich' },
+  // ... 共 20 個餐點
+])
+
+// 用 computed 做一個「過濾器」
+const filteredMenuItems = computed(() => {
+  let items = menuItems.value  // 一開始是全部20個
+  
+  // 如果有選分類（不是 'all'），就只留下這個分類的餐點
+  if (selectedCategory.value !== 'all') {
+    items = items.filter(item => item.category === selectedCategory.value)
+  }
+  
+  return items  // 把過濾後的結果傳回去
+})
+
+// HTML 用 filteredMenuItems 取代 menuItems
+// <div v-for="item in filteredMenuItems">
+```
+
+### 15.2 localStorage 存讀資料
+
+```javascript
+// ========== 寫入資料 ==========
+const orderInfo = {
+  type: 'dine-in',
+  tableNumber: '5',
+  dineInTime: '9:00'
+}
+
+// 把 JS 物件轉成字串，存到 localStorage（小本子）
+localStorage.setItem('orderInfo', JSON.stringify(orderInfo))
+
+// ========== 讀取資料 ==========
+// 從 localStorage（小本子）讀取出來
+const orderInfoJson = localStorage.getItem('orderInfo')
+
+// 把字串轉回 JS 物件
+const orderInfo = JSON.parse(orderInfoJson)
+
+// 如果讀到的值是 null，就用空物件當預設值
+const orderInfo = orderInfoJson ? JSON.parse(orderInfoJson) : null
+```
+
+### 15.3 頁面跳轉
+
+```javascript
+import { useRouter } from 'vue-router'
+
+// 借一台導航機
+const router = useRouter()
+
+// 跳到下一個頁面
+router.push('/order-type')
+
+// 跳到點餐頁面
+router.push('/menu')
+
+// 跳到結帳頁面
+router.push('/order-confirm')
+```
+
+### 15.4 送出訂單流程
+
+```javascript
+const submitOrder = () => {
+  // 1. 檢查購物籃是不是空的
+  if (cartItems.value.length === 0) {
+    alert('購物籃是空的！')
+    return
+  }
+  
+  // 2. 跳出確認對話框
+  const confirmed = confirm(`確定要送出訂單嗎？\n總金額：$${total()}`)
+  
+  // 3. 如果客人按「確定」
+  if (confirmed) {
+    // 把訂單資料存到 localStorage（小本子）
+    const orderData = {
+      cartItems: cartItems.value,
+      total: total()
+    }
+    localStorage.setItem('orderData', JSON.stringify(orderData))
+    
+    // 4. 跳轉到結帳頁面
+    router.push('/order-confirm')
+  }
+}
+```
+
+### 15.5 產生 3 位數訂單編號
+
+```javascript
+// 產生 100 到 999 的隨機三位數
+const orderNumber = String(Math.floor(Math.random() * 900) + 100)
+```
+
+---
+
+## 十六、開發日誌
+
+### 2026/4/9 - Day 2
+- [x] 把一個頁面拆成多個頁面（登入、選擇、取餐、結帳）
+- [x] 新增 OrderType.vue（選擇內用/自取頁面）
+- [x] 新增 OrderConfirm.vue（訂單確認頁面）
+- [x] 修正分類篩選功能（使用 computed + filter）
+- [x] 實作 localStorage 跨頁面傳遞資料
+- [x] 實作送出訂單流程（確認 → 支付方式 → 訂單編號）
+- [x] 把訂單編號改成 3 位數字
+
+---
+
+## 十七、我的學習心得（第二次）
+
+1. **學會了用 `computed` 做過濾器**
+   - 一開始不懂為什麼分類篩選沒作用
+   - 才知道要用 `computed` 來根據條件過濾資料
+
+2. **學會了用 `localStorage` 傳資料**
+   - 不同頁面之間需要溝通
+   - 用 `localStorage` 就像傳話人一樣，把資料傳來傳去
+
+3. **學會了頁面跳轉**
+   - `router.push()` 就是「傳送門」
+   - 可以讓使用者在不同頁面之間穿梭
+
+4. **明白了「餐廳動線」的概念**
+   - 把一個大頁面拆成多個小頁面
+   - 每個頁面只專注做一件事
+   - 客人一步一步走，就像在餐廳裡移動一樣
