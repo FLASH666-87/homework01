@@ -306,7 +306,8 @@ const pickupTimeText = () => {
 /* ==================== 整體樣式 ==================== */
 .order-type-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  /* 極淺綠色背景 */
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   padding: 20px;
 }
 

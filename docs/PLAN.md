@@ -942,3 +942,619 @@ transform: translateY(-5px);
 - 第三次：rgba(245, 255, 248, 0.9) → 剛剛好！
 
 這就像做菜，要慢慢調味道。
+
+---
+
+## 二十二、分類按鈕可折疊面板（第五次對話）
+
+### 22.1 我問 AI 的問題
+
+> 「全部、漢堡、貝果那邊像摩斯漢堡美味專區依樣，但我想把它改成可以縮排的」
+
+> 「分類按鈕（全部、漢堡、貝果、三明治）改成可縮排的樣式就好」
+
+> 「C並把她的位置規劃的跟摩斯漢堡美味專區依樣」
+
+### 22.2 需求分析
+
+**問題：**
+- 分類按鈕（全部、漢堡、貝果、三明治）一直顯示在頂部，佔用空間
+- 想要像手風琴一樣可以展開/收合
+
+### 22.3 AI 給我的白話文步驟
+
+**第一步：準備一個「開關」**
+```
+用 ref() 建立一個叫 showCategory 的盒子：
+- 預設是 false（收合狀態）
+- 點擊後變成 true（展開狀態）
+```
+
+**第二步：寫一個「服務生」切換開關**
+```
+const toggleCategory = () => {
+  showCategory.value = !showCategory.value
+}
+```
+
+**第三步：設定 HTML 結構**
+```
+1. 包一個大容器 .category-panel
+2. 放一個按鈕 .category-toggle（點擊切換）
+3. 放一個內容區 .category-tabs（根據 showCategory 顯示/隱藏）
+```
+
+**第四步：用 v-if 控制顯示/隱藏**
+```
+v-if="showCategory" = 當開關打開時才顯示
+```
+
+### 22.4 修改的檔案
+
+| 檔案 | 修改內容 |
+|------|----------|
+| `Menu.vue` | JS：新增 showCategory/toggleCategory<br>HTML：重構分類面板結構<br>CSS：新增折疊面板樣式 |
+
+### 22.5 程式碼範例
+
+**JS 部分：**
+```javascript
+// 放一個叫 showCategory 的盒子，預設是 false（收合）
+const showCategory = ref(false)
+
+// 切換分類面板的顯示/隱藏
+const toggleCategory = () => {
+  showCategory.value = !showCategory.value
+}
+```
+
+**HTML 部分：**
+```html
+<!-- 分類面板（可展開/收合） -->
+<div class="category-panel">
+  <!-- 點擊展開/收合的按鈕 -->
+  <div class="category-toggle" @click="toggleCategory">
+    <span>☰ 分類篩選</span>
+    <span class="toggle-arrow">{{ showCategory ? '▲' : '▼' }}</span>
+  </div>
+  
+  <!-- 分類按鈕（展開時才顯示） -->
+  <div v-if="showCategory" class="category-tabs">
+    <button class="category-tab">全部</button>
+    <button class="category-tab">🍔 漢堡</button>
+    <button class="category-tab">🥯 貝果</button>
+    <button class="category-tab">🥪 三明治</button>
+  </div>
+</div>
+```
+
+**CSS 部分：**
+```css
+/* 分類面板容器 */
+.category-panel {
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  margin-bottom: 10px;
+}
+
+/* 展開/收合按鈕 */
+.category-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* 分類按鈕列 */
+.category-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px 15px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+/* 分類按鈕 */
+.category-tab {
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: #f0f0f0;
+  cursor: pointer;
+}
+
+.category-tab.active {
+  background: #4CAF50;
+  color: white;
+}
+```
+
+---
+
+## 二十三、開發日誌
+
+### 2026/4/9 - Day 5
+- [x] 分類按鈕改成可折疊面板
+- [x] 新增 showCategory 盒子控制展開/收合
+- [x] 新增 toggleCategory 函數切換狀態
+- [x] 重構 HTML 結構，分類面板獨立出來
+- [x] 新增折疊面板樣式
+
+---
+
+## 二十四、我的學習心得（第五次）
+
+### 1. 學會了「折疊面板」的概念
+
+就像資料夾一樣：
+- 點一下打開 → 看到裡面的東西
+- 再點一下關上 → 隱藏裡面的東西
+
+### 2. 學會了 v-if 的實際應用
+
+`v-if` 不只是「顯示/隱藏」，
+還可以拿來做「展開/收合」的效果。
+
+### 3. 感受到了「空間節省」的好處
+
+一開始分類按鈕一直佔據頂部空間，
+改成折疊面板後，使用者可以自己決定要不要看到。
+
+> 「讓使用者自己選擇要看多少資訊」
+
+### 4. 明白了「使用者體驗」的細節
+
+好的介面不是把所有東西都塞在一起，
+而是讓使用者可以自己控制要看到多少。
+
+---
+
+## 二十五、未來優化方向
+
+### 可以繼續改進的地方
+
+1. **動畫效果**
+   - 折疊/展開時加過渡動畫
+   - 頁面切換時加過渡效果
+
+2. **響應式設計**
+   - 手機版版面調整
+   - 平板版面調整
+
+3. **功能新增**
+   - 會員系統
+   - 歷史訂單
+   - 優惠券管理
+
+4. **UI 優化**
+   - 餐點卡片改成橫向排列（像摩斯那樣）
+   - 下拉式分類選單
+
+### 22.1 我問 AI 的問題
+
+> 「我要把主選單頁面加上和登入頁面一樣的極淺綠色背景」
+
+> 「選擇取餐方式頁面也要加極淺綠背景」
+
+> 「版面太擁擠了，請幫我排鬆散一點」
+
+> 「訂單確認頁面也要加極淺綠背景」
+
+### 22.2 需求分析
+
+**問題 1：其他頁面沒有綠色背景**
+- 只有登入頁面有極淺綠色背景
+- 其他頁面（選擇取餐方式、主選單、訂單確認）還是灰色
+
+**問題 2：版面太擁擠**
+- 餐點卡片之間太近
+- 分類標籤之間太擠
+- 購物籃項目之間太密
+
+### 22.3 AI 給我的白話文步驟
+
+**第一步：設定所有頁面的背景**
+```
+在每個頁面的 .page 加上相同的漸層背景：
+background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+```
+
+**第二步：調整餐點卡片間距**
+```
+gap: 20px;  /* 從 15px 增加到 20px */
+padding: 20px;  /* 從 15px 增加到 20px */
+```
+
+**第三步：調整圖片高度**
+```
+height: 140px;  /* 從 120px 增加到 140px */
+```
+
+**第四步：調整分類標籤間距**
+```
+gap: 15px;  /* 從 10px 增加到 15px */
+padding: 20px;  /* 從 15px 增加到 20px */
+```
+
+**第五步：調整購物籃項目間距**
+```
+padding: 15px;  /* 從 10px 增加到 15px */
+```
+
+### 22.4 修改的檔案
+
+| 檔案 | 修改內容 |
+|------|----------|
+| `OrderType.vue` | 背景改為極淺綠色漸層 |
+| `Menu.vue` | 背景改為極淺綠色漸層 + 版面調整 |
+| `OrderConfirm.vue` | 背景改為極淺綠色漸層 |
+
+### 22.5 Menu.vue 詳細修改
+
+**格線系統調整：**
+```css
+/* 原本 */
+grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+gap: 15px;
+
+/* 修改後 */
+grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+gap: 20px;
+```
+
+**卡片內距調整：**
+```css
+/* 原本 */
+padding: 15px;
+
+/* 修改後 */
+padding: 20px;
+```
+
+**圖片高度調整：**
+```css
+/* 原本 */
+height: 120px;
+
+/* 修改後 */
+height: 140px;
+```
+
+**分類標籤調整：**
+```css
+/* 原本 */
+gap: 10px;
+padding: 15px 20px;
+
+/* 修改後 */
+gap: 15px;
+padding: 20px 25px;
+```
+
+**購物籃項目調整：**
+```css
+/* 原本 */
+padding: 10px 0;
+
+/* 修改後 */
+padding: 15px 0;
+```
+
+---
+
+## 二十三、版面設計常用術語（白話版）
+
+### 23.1 間距相關
+
+| 術語 | 白話 | 比喻 |
+|------|------|------|
+| `gap` | **間距** | 東西和東西之間的距離 |
+| `padding` | **內距** | 東西裡面的空白 |
+| `margin` | **外距** | 東西外面的空白 |
+
+### 23.2 格線系統相關
+
+| 術語 | 白話 | 比喻 |
+|------|------|------|
+| `grid-template-columns` | **欄位設定** | 決定一行放幾個 |
+| `repeat()` | **重複** | 重複同樣的設定 |
+| `auto-fill` | **自動填滿** | 盡量填滿一行 |
+| `minmax()` | **最大最小值** | 東西最大/最小可以到哪 |
+
+### 23.3 尺寸相關
+
+| 術語 | 白話 | 比喻 |
+|------|------|------|
+| `width` | **寬度** | 東西的寬 |
+| `height` | **高度** | 東西的高 |
+| `min-width` | **最小寬度** | 東西最窄能多窄 |
+| `max-width` | **最大寬度** | 東西最寬能多寬 |
+
+---
+
+## 二十四、開發日誌
+
+### 2026/4/9 - Day 4
+- [x] 為所有頁面添加極淺綠色背景
+- [x] OrderType.vue 背景改為漸層
+- [x] Menu.vue 背景改為漸層
+- [x] OrderConfirm.vue 背景改為漸層
+- [x] Menu.vue 版面調整（更鬆散）
+- [x] 餐點卡片間距增加
+- [x] 分類標籤間距增加
+- [x] 購物籃項目間距增加
+
+---
+
+## 二十五、我的學習心得（第四次）
+
+### 1. 學會了「一致性的設計」
+
+把所有頁面都用同樣的背景，可以讓整個網站看起來更統一。
+
+就像一個品牌的所有產品都用同樣的顏色，讓人一眼就能認出來。
+
+### 2. 學會了「留白」的重要性
+
+一開始版面很擁擠，東西都擠在一起。
+
+後來學會了增加間距，讓每個東西都有呼吸的空間。
+
+> 「留白不是空白，而是讓內容更突出」
+
+### 3. 學會了用 Grid 自動調整版面
+
+用 `repeat(auto-fill, minmax(180px, 1fr))` 可以讓版面自動調整：
+
+- 螢幕寬 → 放更多卡片
+- 螢幕窄 → 放更少卡片
+
+這就是「響應式設計」的概念！
+
+### 4. 感受到了「使用者體驗」的重要
+
+好的版面不是給工程師看的，是給使用者看的。
+
+讓間距變大、按鈕變好按，整個體驗就會提升。
+
+---
+
+## 二十六、未來優化方向
+
+### 可以繼續改進的地方
+
+1. **動畫效果**
+   - 卡片 hover 時加點動畫
+   - 頁面切換時加過渡效果
+
+2. **響應式設計**
+   - 手機版版面調整
+   - 平板版面調整
+
+3. **更多頁面美化**
+   - 按鈕樣式統一
+   - 字體大小統一
+   - 陰影效果統一
+
+4. **功能新增**
+   - 會員系統
+   - 歷史訂單
+   - 優惠券管理
+
+---
+
+## 二十七、☰ 分類篩選下拉選單（第六次對話）
+
+### 27.1 我問 AI 的問題
+
+> 「全部、漢堡、貝果那邊像摩斯漢堡美味專區依樣，但我想把它改成可以縮排的」
+
+> 「像 Reddit 的導航列那樣的設計」
+
+> 「下拉選單刪掉，點擊 ☰ 後展開垂直排列的分類按鈕」
+
+> 「☰ 圖示按鈕點開沒反應，還有上面白色區塊很單調」
+
+### 27.2 需求分析
+
+**問題 1：分類按鈕太佔空間**
+- 原本分類按鈕橫向排列，一直佔據頂部空間
+- 想要點擊才展開
+
+**問題 2：外觀太單調**
+- 白色背景看起來很單調
+- 想要更好看的設計
+
+**問題 3：下拉選單不工作**
+- 點擊後沒反應
+- 原因是 `selectCategory` 函數被誤刪
+
+### 27.3 AI 給我的白話文步驟
+
+**第一步：設計下拉選單結構**
+```
+就像餐廳的菜單：
+1. 先放一個「☰ 分類篩選」按鈕
+2. 用 `position: absolute` 讓選單「浮在空中」
+3. 選單在按鈕下面展開，不影響其他東西
+```
+
+**第二步：設定 CSS 樣式**
+```
+1. `.category-wrapper`：包住按鈕和選單的容器
+2. `.category-toggle`：按鈕的樣式（圓角、hover 效果）
+3. `.category-dropdown`：下拉選單的樣式
+   - position: absolute（浮在空中）
+   - z-index: 1000（在其他東西上面）
+   - box-shadow（陰影效果）
+```
+
+**第三步：美化身體頂部區域**
+```
+1. 背景改成綠色漸層
+2. 返回按鈕變成白色
+3. 用戶名加上圓角背景
+```
+
+### 27.4 修改的檔案
+
+| 檔案 | 修改內容 |
+|------|----------|
+| `Menu.vue` | 1. HTML：新增 `.category-wrapper` 和下拉選單結構<br>2. CSS：美化頂部區域、下拉選單樣式<br>3. JS：新增 `toggleCategory` 和 `selectCategory` 函數 |
+
+### 27.5 程式碼範例
+
+**HTML 部分：**
+```html
+<!-- ☰ 分類篩選包裝器 -->
+<div class="category-wrapper">
+  <!-- 按鈕 -->
+  <button class="category-toggle" @click="toggleCategory">
+    ☰ 分類篩選
+  </button>
+  
+  <!-- 下拉選單（展開時顯示） -->
+  <div v-if="showCategory" class="category-dropdown">
+    <button @click="selectCategory('all'); toggleCategory()">全部</button>
+    <button @click="selectCategory('burger'); toggleCategory()">🍔 漢堡</button>
+    <button @click="selectCategory('bagel'); toggleCategory()">🥯 貝果</button>
+    <button @click="selectCategory('sandwich'); toggleCategory()">🥪 三明治</button>
+  </div>
+</div>
+```
+
+**CSS 部分：**
+```css
+/* 包裝器 */
+.category-wrapper {
+  position: relative;  /* 讓子元素可以絕對定位 */
+}
+
+/* 按鈕 */
+.category-toggle {
+  padding: 8px 16px;
+  border-radius: 20px;  /* 圓角膠囊 */
+  cursor: pointer;
+}
+
+.category-toggle:hover {
+  border-color: #4CAF50;  /* hover 時變綠色 */
+}
+
+/* 下拉選單 */
+.category-dropdown {
+  position: absolute;  /* 浮在空中 */
+  top: 100%;          /* 在按鈕下面 */
+  left: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);  /* 陰影 */
+  z-index: 1000;      /* 在其他東西上面 */
+}
+```
+
+**JS 部分：**
+```javascript
+// 控制展開/收合
+const showCategory = ref(false)
+
+const toggleCategory = () => {
+  showCategory.value = !showCategory.value
+}
+
+// 選擇分類
+const selectCategory = (category: string) => {
+  selectedCategory.value = category
+}
+```
+
+### 27.6 效果示意圖
+
+```
+【未展開】
+┌────────────────────────────────────────────────────┐
+│  ← 返回                              👤 用戶名      │
+│  ☰ 分類篩選                          🔍 搜尋...    │
+└────────────────────────────────────────────────────┘
+
+【展開後】
+┌────────────────────────────────────────────────────┐
+│  ← 返回                              👤 用戶名      │
+│  ☰ 分類篩選  ┌──────────┐            🔍 搜尋... │
+│              │ 全部     │                          │
+│              │ 🍔 漢堡  │                          │
+│              │ 🥯 貝果  │                          │
+│              │ 🥪 三明治│                          │
+│              └──────────┘                          │
+└────────────────────────────────────────────────────┘
+```
+
+### 27.7 學到的生活比喻
+
+| 概念 | 比喻 | 意思 |
+|------|------|------|
+| `position: absolute` | **浮在空中** | 元素浮起來，不影響其他東西的位置 |
+| `z-index` | **紙張層級** | 疊在一起的紙，數字越大越在上面 |
+| `dropdown` | **拉下來的菜單** | 點擊後向下展開的選項列表 |
+
+### 27.8 遇到問題與修復
+
+**問題：下拉選單點擊沒反應**
+
+症狀：
+- 點擊 ☰ 分類篩選後，下拉選單不出現
+- 或者選項點擊後沒反應
+
+原因：
+- `selectCategory` 函數被誤刪了
+
+修復：
+```javascript
+// 重新加入函數
+const selectCategory = (category: string) => {
+  selectedCategory.value = category
+}
+```
+
+---
+
+## 二十八、開發日誌
+
+### 2026/4/9 - Day 6
+- [x] ☰ 分類篩選下拉選單設計
+- [x] 參考 Reddit 導航列的設計
+- [x] 頂部區域美化（綠色漸層背景）
+- [x] 下拉選單絕對定位
+- [x] 修復 selectCategory 函數被刪的問題
+
+---
+
+## 二十九、我的學習心得（第六次）
+
+### 1. 學會了「下拉選單」的原理
+
+下拉選單的重點是：
+1. 用 `position: relative` 當作參考點
+2. 用 `position: absolute` 讓子元素浮起來
+3. 用 `z-index` 決定誰在上面
+
+### 2. 學會了「絕對定位」的好處
+
+絕對定位讓子元素可以「浮在空中」，
+這樣展開時不會把其他東西往下推。
+
+### 3. 明白了「z-index」的重要
+
+z-index 就像疊在一起的紙張：
+- 數字越大 → 越在上面
+- 下拉選單要用 `z-index: 1000` 才能顯示在搜尋框上面
+
+### 4. 感受到了「除錯」的重要性
+
+這次遇到「下拉選單不工作」的問題，
+原因是函數被誤刪了。
+
+下次刪除程式碼時要更小心！
+

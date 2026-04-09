@@ -20,13 +20,6 @@ onMounted(() => {
 
 // ==================== 放資料的盒子 ====================
 
-// 放一個叫 searchKeyword 的盒子，裝搜尋關鍵字
-const searchKeyword = ref('')
-
-// 放一個叫 selectedCategory 的盒子，裝目前選的分類
-// 預設是 'all'（全部）
-const selectedCategory = ref('all')
-
 // 放一個叫 cartItems 的盒子，裝購物籃裡的東西
 // 一開始是空的（沒有預設值）
 const cartItems = ref<Array<{id: number, name: string, price: number, quantity: number}>>([])
@@ -39,8 +32,8 @@ const showCoupon = ref(false)
 
 // 放一個叫 userName 的盒子，裝會員名字
 // 從 localStorage 讀取當前登入者的名字
-const currentUserJson = localStorage.getItem('currentUser')
-const currentUser = currentUserJson ? JSON.parse(currentUserJson) : null
+const currentUserJson2 = localStorage.getItem('currentUser')
+const currentUser = currentUserJson2 ? JSON.parse(currentUserJson2) : null
 const userName = ref(currentUser?.name || '訪客')
 
 // 放一個叫 orderInfo 的盒子，裝取餐資訊
@@ -97,7 +90,21 @@ const menuItems = ref([
   { id: 20, name: '黃金蝦三明治', price: 75, category: 'sandwich', image: 'https://www.mos.com.tw/upload/product/20230411_184119_011.jpg' }
 ])
 
-// ==================== 服務生函數 ====================
+// 放一個叫 searchKeyword 的盒子，裝搜尋關鍵字
+const searchKeyword = ref('')
+
+// 放一個叫 selectedCategory 的盒子，裝目前選的分類
+// 預設是 'all'（全部）
+const selectedCategory = ref('all')
+
+// 放一個叫 showCategory 的盒子，預設是 false（收合）
+// 用來控制分類面板要不要展開
+const showCategory = ref(false)
+
+// 切換分類面板的顯示/隱藏
+const toggleCategory = () => {
+  showCategory.value = !showCategory.value
+}
 
 // 選擇分類
 const selectCategory = (category: string) => {
@@ -271,22 +278,70 @@ const submitOrder = () => {
     
     <!-- ==================== 頂部區 ==================== -->
     <header class="header">
-      <button class="back-btn" @click="goBack">← 返回</button>
       
-      <!-- 搜尋框 -->
-      <div class="search-box">
-        <input 
-          v-model="searchKeyword"
-          type="text"
-          placeholder="🔍 搜尋餐點..."
-          class="search-input"
-        />
+      <!-- 第一行：返回按鈕 + 用戶名 -->
+      <!-- 第一行：返回按鈕 + 用戶名 -->
+      <div class="header-top">
+        <button class="back-btn" @click="goBack">← 返回</button>
+        <div class="user-info">
+          <span>👤 {{ userName }}</span>
+        </div>
       </div>
       
-      <!-- 會員名稱 -->
-      <div class="user-info">
-        <span>👤 {{ userName }}</span>
+      <!-- 第二行：☰ 分類篩選 + 搜尋框 -->
+      <div class="menu-layout">
+        
+        <!-- 左邊：☰ 分類篩選按鈕 -->
+        <div class="category-wrapper">
+          <button class="category-toggle" @click="toggleCategory">
+            <span>☰ 分類篩選</span>
+          </button>
+          
+          <!-- 分類下拉選單（展開時顯示，不影響高度） -->
+          <div v-if="showCategory" class="category-dropdown">
+            <button 
+              class="category-item"
+              :class="{ active: selectedCategory === 'all' }"
+              @click="selectCategory('all'); toggleCategory()"
+            >
+              全部
+            </button>
+            <button 
+              class="category-item"
+              :class="{ active: selectedCategory === 'burger' }"
+              @click="selectCategory('burger'); toggleCategory()"
+            >
+              🍔 漢堡
+            </button>
+            <button 
+              class="category-item"
+              :class="{ active: selectedCategory === 'bagel' }"
+              @click="selectCategory('bagel'); toggleCategory()"
+            >
+              🥯 貝果
+            </button>
+            <button 
+              class="category-item"
+              :class="{ active: selectedCategory === 'sandwich' }"
+              @click="selectCategory('sandwich'); toggleCategory()"
+            >
+              🥪 三明治
+            </button>
+          </div>
+        </div>
+        
+        <!-- 右邊：搜尋框 -->
+        <div class="search-box">
+          <input 
+            v-model="searchKeyword"
+            type="text"
+            placeholder="搜尋餐點..."
+            class="search-input"
+          />
+        </div>
+        
       </div>
+      
     </header>
 
     <!-- ==================== 取餐資訊顯示區 ==================== -->
@@ -295,38 +350,6 @@ const submitOrder = () => {
         {{ orderTypeText }}
         <span v-if="orderDetailText"> - {{ orderDetailText }}</span>
       </div>
-    </div>
-
-    <!-- ==================== 分類標籤 ==================== -->
-    <div class="category-tabs">
-      <button 
-        class="category-tab"
-        :class="{ active: selectedCategory === 'all' }"
-        @click="selectCategory('all')"
-      >
-        全部
-      </button>
-      <button 
-        class="category-tab"
-        :class="{ active: selectedCategory === 'burger' }"
-        @click="selectCategory('burger')"
-      >
-        🍔 漢堡
-      </button>
-      <button 
-        class="category-tab"
-        :class="{ active: selectedCategory === 'bagel' }"
-        @click="selectCategory('bagel')"
-      >
-        🥯 貝果
-      </button>
-      <button 
-        class="category-tab"
-        :class="{ active: selectedCategory === 'sandwich' }"
-        @click="selectCategory('sandwich')"
-      >
-        🥪 三明治
-      </button>
     </div>
 
     <!-- ==================== 餐點展示區 ==================== -->
@@ -511,60 +534,156 @@ const submitOrder = () => {
 /* ==================== 整體樣式 ==================== */
 .menu-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  /* 極淺綠色背景 */
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   padding-bottom: 120px;
 }
 
 /* ==================== 頂部區 ==================== */
 .header {
-  background: white;
+  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
   padding: 15px 20px;
   display: flex;
-  align-items: center;
-  gap: 15px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  flex-direction: column;
+  gap: 12px;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
+/* 第一行：返回按鈕 + 用戶名 */
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .back-btn {
   background: none;
   border: none;
-  color: #4CAF50;
+  color: white;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  padding: 10px;
+  padding: 8px 12px;
   white-space: nowrap;
+  border-radius: 20px;
+  transition: background 0.3s;
 }
 
 .back-btn:hover {
-  color: #45a049;
+  background: rgba(255,255,255,0.2);
 }
 
+/* ==================== 整體佈局（☰ 分類篩選 + 搜尋框）==================== */
+.menu-layout {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 0;
+}
+
+/* ☰ 分類篩選包裝器（用來放置下拉選單） */
+.category-wrapper {
+  position: relative;
+}
+
+/* ☰ 分類篩選按鈕 */
+.category-toggle {
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.category-toggle:hover {
+  border-color: #4CAF50;
+  color: #4CAF50;
+}
+
+/* 分類下拉選單（絕對定位，不影響高度） */
+.category-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  overflow: hidden;
+  z-index: 1000;
+  min-width: 130px;
+}
+
+/* 分類選項 */
+.category-item {
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: left;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.category-item:hover {
+  background: #f5f5f5;
+}
+
+.category-item.active {
+  background: #4CAF50;
+  color: white;
+}
+
+.category-item:not(:last-child) {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* 搜尋框 - 在 header 右邊 */
 .search-box {
+  margin-left: auto;
   flex: 1;
-  max-width: 60%;
+  max-width: 280px;
+  position: relative;
+}
+
+.search-box::before {
+  content: '🔍';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 15px;
-  border: 2px solid #e0e0e0;
-  border-radius: 20px;
-  font-size: 16px;
+  padding: 10px 20px 10px 38px;
+  border: none;
+  border-radius: 25px;
+  font-size: 14px;
+  background: rgba(255,255,255,0.95);
+  transition: all 0.3s;
+  color: #333;
+}
+
+.search-input::placeholder {
+  color: #999;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #4CAF50;
-}
-
-.user-info {
-  font-size: 16px;
-  color: #333;
-  white-space: nowrap;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 /* ==================== 取餐資訊顯示區 ==================== */
@@ -577,32 +696,7 @@ const submitOrder = () => {
 }
 
 .order-info-text {
-  font-size: 16px;
-}
-
-/* ==================== 分類標籤 ==================== */
-.category-tabs {
-  display: flex;
-  gap: 10px;
-  padding: 15px 20px;
-  overflow-x: auto;
-  background: white;
-  margin-bottom: 10px;
-}
-
-.category-tab {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 20px;
-  background: #f0f0f0;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.3s;
-}
-
-.category-tab.active {
-  background: #333;
-  color: white;
+  font-size: 14px;
 }
 
 /* ==================== 餐點展示區 ==================== */
@@ -619,14 +713,36 @@ const submitOrder = () => {
 
 .menu-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 15px;
+  /* 預設：小手機一行 2 個 */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* 大手機/小平板：一行 3 個 */
+@media (min-width: 576px) {
+  .menu-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 平板/小筆電：一行 4 個 */
+@media (min-width: 768px) {
+  .menu-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 筆電/桌上型：一行 5 個 */
+@media (min-width: 1024px) {
+  .menu-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 .menu-card {
   background: white;
   border-radius: 15px;
-  padding: 15px;
+  padding: 20px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transition: transform 0.3s;
@@ -639,9 +755,10 @@ const submitOrder = () => {
 .menu-image {
   width: 100%;
   height: 120px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  background: #f9f9f9;
 }
 
 .menu-name {
@@ -750,7 +867,7 @@ const submitOrder = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0;
+  padding: 15px 0;
   border-bottom: 1px solid #f0f0f0;
 }
 
