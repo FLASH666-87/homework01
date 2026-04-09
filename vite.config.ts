@@ -7,7 +7,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/homework01/',
+  base: './',
   plugins: [
     vue(),
     vueJsx(),
