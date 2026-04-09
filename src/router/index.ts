@@ -8,7 +8,7 @@ import OrderConfirm from '../views/OrderConfirm.vue'
 // 負責把不同的網址對應到不同的頁面
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory('/homework01/'),
   routes: [
     {
       // 當網址是 / 的時候（首頁）
